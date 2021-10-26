@@ -37,7 +37,7 @@ def run(fold):
     predictions = model.predict(df_test)
 
     auc = metrics.roc_auc_score(y_true=y_test, y_score=predictions)
-    print(auc)
+    print(f"AUC on fold {fold}: {auc}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
