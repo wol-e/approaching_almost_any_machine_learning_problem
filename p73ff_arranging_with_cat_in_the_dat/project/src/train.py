@@ -8,7 +8,8 @@ from config import TRAINING_DATA_PATH
 
 def run(fold):
     """
-    runs training on provided fold, i.e. uses the training data with matching fold as test data and trains on remaining data
+    runs training on provided fold, i.e. uses the training data with matching fold as test data and trains on remaining
+    data.
 
     :param fold int: fold number to run training for
     :return: None
