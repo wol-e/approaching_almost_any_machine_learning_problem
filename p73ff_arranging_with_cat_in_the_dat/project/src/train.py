@@ -16,22 +16,14 @@ def run(model_name, fold):
     """
     df_train = pd.read_csv(TRAINING_DATA_PATH)
 
-    ######### TODO: handle cats
-    #numeric_features = [c for c in df_train.columns if df_train[c].dtype == "float64"]
-    #df_train = df_train[numeric_features + ["strat_fold", "target"]]
-    #########
-
     df_test = df_train[df_train.strat_fold == fold].reset_index(drop=True)
     df_train = df_train[df_train.strat_fold != fold].reset_index(drop=True)
 
     y_train = df_train.target.values
     y_test = df_test.target.values
 
-    df_train = df_train.drop(["target", "strat_fold"], axis=1)
-    df_test = df_test.drop(["target", "strat_fold"], axis=1)
-
-    # TODO: proper nan imputation
-    #df_train, df_test = df_train.fillna(0), df_test.fillna(0)
+    df_train = df_train.drop(["id", "target", "strat_fold"], axis=1)
+    df_test = df_test.drop(["id", "target", "strat_fold"], axis=1)
 
     feature_engineering = importlib.import_module(f"models.{model_name}.feature_engineering")
     model = importlib.import_module(f"models.{model_name}.model").model
@@ -41,8 +33,8 @@ def run(model_name, fold):
 
     model.fit(df_train, y_train)
 
-    auc_test = metrics.roc_auc_score(y_true=y_test, y_score=model.predict(df_test))
-    auc_train = metrics.roc_auc_score(y_true=y_train, y_score=model.predict(df_train))
+    auc_test = metrics.roc_auc_score(y_true=y_test, y_score=model.predict_proba(df_test)[:, 1])
+    auc_train = metrics.roc_auc_score(y_true=y_train, y_score=model.predict_proba(df_train)[:, 1])
     print(f"AUC on fold {fold}: Train: {auc_train}, Test: {auc_test}")
 
 if __name__ == "__main__":
