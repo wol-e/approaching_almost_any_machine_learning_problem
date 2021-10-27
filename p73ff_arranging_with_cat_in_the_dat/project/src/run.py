@@ -1,3 +1,3 @@
 from train import run
 
-run(model_name="tree", fold=0)
+run(model_name="logistic_regression", fold=0)
