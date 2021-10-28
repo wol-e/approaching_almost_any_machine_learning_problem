@@ -8,44 +8,41 @@ sys.path.append("...")  # TODO: to find the config. there must be a better way.
 from config import TRAINING_FEATURES
 
 
-def feature_pipeline(df_train, df_test, encoder=None):
-    df_train = df_train[TRAINING_FEATURES]
-    df_train = nan_imputation(df_train)
-    if df_test is not None:
-        df_test = df_test[TRAINING_FEATURES]
-        df_test = nan_imputation(df_test)
-    if not encoder:
-        encoder = Encoder()
-        encoder.fit(df_train, df_test)
-    df_train = encoder.transform(df_train)
-    df_train = scale_features(df_train)
-    if df_test is not None:
-        df_test = encoder.transform(df_test)
-        df_test = scale_features(df_test)
+class FeaturePipeline():
+    def __init__(self):
+        self.encoder = Encoder()
+        self.scaler = StandardScaler(with_mean=False)
 
-    return df_train, df_test
+    def fit(self, df):
+        df = df[TRAINING_FEATURES]
+        df = nan_imputation(df)
+        self.encoder.fit(df)
+
+    def transform(self, df):
+        df = df[TRAINING_FEATURES]
+        df = nan_imputation(df)
+        df = self.encoder.transform(df)
+        df = self.scaler.fit_transform(df)
+
+        return df
 
 
 class Encoder:
     def __init__(self):
         self.encoder = OneHotEncoder(handle_unknown="ignore")
 
-    def fit(self, df_train, df_test=None):
-        for col in df_train.columns:
-            if df_train[col].dtype == "object":
-                df_train[col] = df_train[col].astype(str)
-                if df_test is not None:
-                    df_test[col] = df_test[col].astype(str)
+    def fit(self, df):
+        for col in df.columns:
+            if df[col].dtype == "object":
+                df[col] = df[col].astype(str)
 
-        self.encoder.fit(pd.concat([df_train, df_test]))
+        self.encoder.fit(df)
 
     def transform(self, df):
+        for col in df.columns:
+            if df[col].dtype == "object":
+                df[col] = df[col].astype(str)
         return self.encoder.transform(df)
-
-
-def scale_features(df):
-    scaler = StandardScaler(with_mean=False)
-    return scaler.fit_transform(df)
 
 
 def nan_imputation(df):

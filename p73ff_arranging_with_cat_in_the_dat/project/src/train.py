@@ -25,7 +25,9 @@ def run(model_name, fold, save_model=False):
     feature_engineering = importlib.import_module(f"models.{model_name}.feature_engineering")
     model = importlib.import_module(f"models.{model_name}.model").model
 
-    df_train, df_test = feature_engineering.feature_pipeline(df_train, df_test)
+    pipeline = feature_engineering.FeaturePipeline()
+    pipeline.fit(pd.concat([df_train, df_test]))
+    df_train, df_test = pipeline.transform(df_train), pipeline.transform(df_test)
 
     model.fit(df_train, y_train)
 
