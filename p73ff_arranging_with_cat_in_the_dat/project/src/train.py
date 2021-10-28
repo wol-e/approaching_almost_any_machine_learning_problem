@@ -6,7 +6,7 @@ from sklearn import metrics
 
 from config import TRAINING_DATA_PATH
 
-def run(model_name, fold):
+def run(model_name, fold, save_model=False):
     """
     runs training on provided fold, i.e. uses the training data with matching fold as test data and trains on remaining
     data.
@@ -22,9 +22,6 @@ def run(model_name, fold):
     y_train = df_train.target.values
     y_test = df_test.target.values
 
-    df_train = df_train.drop(["id", "target", "strat_fold"], axis=1)
-    df_test = df_test.drop(["id", "target", "strat_fold"], axis=1)
-
     feature_engineering = importlib.import_module(f"models.{model_name}.feature_engineering")
     model = importlib.import_module(f"models.{model_name}.model").model
 
@@ -35,6 +32,9 @@ def run(model_name, fold):
     auc_test = metrics.roc_auc_score(y_true=y_test, y_score=model.predict_proba(df_test)[:, 1])
     auc_train = metrics.roc_auc_score(y_true=y_train, y_score=model.predict_proba(df_train)[:, 1])
     print(f"AUC on fold {fold}: Train: {auc_train}, Test: {auc_test}")
+
+    if save_model:
+        joblib.dump(model, f"saved_models/{model_name}/{model_name}_fold_{fold}.joblib")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
