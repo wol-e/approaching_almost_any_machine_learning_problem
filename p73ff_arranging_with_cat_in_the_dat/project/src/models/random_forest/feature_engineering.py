@@ -1,27 +1,48 @@
 from sklearn.preprocessing import OrdinalEncoder
-import numpy as np
+
+import sys
+
+sys.path.append("...")  # TODO: to find the config. there must be a better way.
+from config import TRAINING_FEATURES
 
 
-def feature_pipeline(df_train, df_test):
-    df_train = nan_imputation(df_train)
-    df_test = nan_imputation(df_test)
-    df_train, df_test = encode_objects(df_train, df_test)
+class FeaturePipeline():
+    def __init__(self):
+        self.encoder = Encoder()
 
-    return df_train, df_test
+    def fit(self, df):
+        df = df[TRAINING_FEATURES]
+        df = nan_imputation(df)
+        self.encoder.fit(df)
+
+    def transform(self, df):
+        df = df[TRAINING_FEATURES]
+        df = nan_imputation(df)
+        df = self.encoder.transform(df)
+
+        return df
 
 
-def encode_objects(df_train, df_test):
-    for col in df_train.columns:
-        if df_train[col].dtype == "object":
-            df_train[col] = df_train[col].astype(str)
-            df_test[col] = df_test[col].astype(str)
+class Encoder:
+    def __init__(self):
+        self.encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
 
-            encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
-            encoder.fit(df_train[col].values.reshape(-1,1))
-            df_train[col] = encoder.transform(df_train[col].values.reshape(-1,1))
-            df_test[col] = encoder.transform(df_test[col].values.reshape(-1,1))
+    def fit(self, df):
+        for col in df.columns:
+            if df[col].dtype == "object":
+                df[col] = df[col].astype(str)
 
-    return df_train, df_test
+        self.encoder.fit(df)
+
+    def transform(self, df):
+        for col in df.columns:
+            if df[col].dtype == "object":
+                df[col] = df[col].astype(str)
+        return self.encoder.transform(df)
+
+        #    encoder.fit(df_train[col].values.reshape(-1,1))
+        #    df_train[col] = encoder.transform(df_train[col].values.reshape(-1,1))
+        #    df_test[col] = encoder.transform(df_test[col].values.reshape(-1,1))
 
 def nan_imputation(df):
     return df.fillna("NONE")
